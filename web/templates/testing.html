@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+   <body>
+   
+      <h2 style = "text-align: center;">Test Sports Classifier</h2>
+		
+      <form action = "http://localhost:5000/testing" method = post>
+         <fieldset>
+            
+            <div style = font-size:20px; font-weight:bold; margin-left:150px;>
+               {{ form.name.label }}<br>
+               {{ form.name }}
+               <br>
+               
+               {{ form.Gender.label }} {{ form.Gender }}
+               {{ form.Address.label }}<br>
+               {{ form.Address }}
+               <br>
+               
+               {{ form.email.label }}<br>
+               {{ form.email }}
+               <br>
+               {{ form.submit }}
+            </div>
+            
+         </fieldset>
+      </form>
+      
+   </body>
+</html>
