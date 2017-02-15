@@ -401,9 +401,6 @@ class SportsClassifier(object):
 			print("words to be used to extract features: {}".format(len(self.train_word_list)))
 		else:
 			pass
-		#print("event BEFORE only popular words:",df.iloc[:4,0])
-		# only leave words that made it into self.train_word_list for ANY data frame, not just training
-		#print("righ tword list:",self.train_word_list[:10])
 		for col in ['event', 'venue']:
 			df[col] = df[col].apply(lambda x: " ".join([w for w in x.split() if  w in self.train_word_list]))
 		#print("event AFTER only popular words:",df.iloc[:4,0])
