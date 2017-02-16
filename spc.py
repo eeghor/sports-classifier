@@ -1,32 +1,14 @@
-import json
 import pandas as pd
-import itertools
 from collections import defaultdict, Counter
 import time
-import random
-import math 
-import dill
-from sklearn.externals import joblib
 from datetime import datetime as dt
 
-"""
-scikit-learn
-"""
-
-from sklearn.svm import SVC
-from sklearn.linear_model import Lars
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import BaggingClassifier, GradientBoostingClassifier
-
+from file_fncs import file2list, list2file, setup_dirs
 import numpy as np
 import sys, os, shutil
 from sklearn import svm
-from sklearn.decomposition import PCA
-#import progressbar
-# see https://pypi.python.org/pypi/multiprocessing_on_dill
+
 import multiprocessing_on_dill as multiprocessing
 from multiprocessing_on_dill import Pool
 from functools import wraps
@@ -47,26 +29,6 @@ def run_and_time(method):
 		return res
 
 	return wrap_func
-
-def setup_dirs(dnames, todo="check"):
-
-		for dname in dnames:
-
-			if os.path.isdir("./" + dname):  # if dir exists
-				if todo == "reset":  # and we need delete it and create anew 
-					print("directory {} already exists. resetting...".format(dname), end="")
-					shutil.rmtree(dname)
-					os.mkdir(dname)
-					print("ok")			
-				elif todo == "check":  # only had to check if exists, do nothing
-					pass
-			else:  # if directory doesn't exist
-				if todo == "check":
-					sys.exit(">> error >> directory {} is MISSING!".format(dname))
-				elif todo == "reset":
-					print("creating new directory {}...".format(dname))
-					os.mkdir(dname)
-					print("ok")
 
 class SportsClassifier(object):
 
@@ -134,15 +96,15 @@ class SportsClassifier(object):
 		self.AUS_THEATRE_COMPANIES = self.AUS_OPERA_COMPANIES = self.NAMES_M = self.NAMES_F = \
 		self.STPW = self.AUS_SUBURBS = self.COUNTRIES = self.PERFORMERS = frozenset()
 
-	def __list2file(self, filename, lst):
+	def list2file(self, filename, lst):
 
 		with open(filename, "w") as f:
 			for w in lst:
 				if isinstance(w, bytes):
-					print("WARNING: __list2file is trying to save BYTES!")
+					print("WARNING: list2file is trying to save BYTES!")
 				f.write("{}\n".format(w))
 
-	def __read2list(self,filename, msg):
+	def file2list(self,filename, msg):
 			"""
 			read lines from a text file "filename" and put them into a list; 
 			show message "msg" 
@@ -151,7 +113,7 @@ class SportsClassifier(object):
 				lst = [line.strip() for line in f if line.strip()]
 			for w in lst:
 				if isinstance(w, bytes):
-					print("WARNING: __read2list just read BYTES!")
+					print("WARNING: file2list just read BYTES!")
 			print(msg + "...{}...ok".format(len(lst)))
 			return frozenset(lst)
 
@@ -159,19 +121,19 @@ class SportsClassifier(object):
 
 		print("[reading data]")
 
-		self.AUS_THEATRE_COMPANIES = self.__read2list("theatre_companies_australia.txt", "australian theatre companies")
-		self.AUS_OPERA_COMPANIES = self.__read2list("opera_companies_australia.txt", "australian opera companies")
-		self.NAMES_M = self.__read2list("names_m_5k.txt", "male names")
-		self.NAMES_F = self.__read2list("names_f_5k.txt", "female names")
-		self.STPW = self.__read2list("english_stopwords.txt", "english stopwords")
+		self.AUS_THEATRE_COMPANIES = self.file2list("theatre_companies_australia.txt", "australian theatre companies")
+		self.AUS_OPERA_COMPANIES = self.file2list("opera_companies_australia.txt", "australian opera companies")
+		self.NAMES_M = self.file2list("names_m_5k.txt", "male names")
+		self.NAMES_F = self.file2list("names_f_5k.txt", "female names")
+		self.STPW = self.file2list("english_stopwords.txt", "english stopwords")
 		# australian suburb/city list (by Australia Post, Sep 2016)
-		self.AUS_SUBURBS = self.__read2list("aus_suburbs.txt", "australian suburbs")
+		self.AUS_SUBURBS = self.file2list("aus_suburbs.txt", "australian suburbs")
 		# load australian sports team nicknames
-		self.AUS_TEAM_NICKS = self.__read2list("aus_team_nicknames.txt", "australian team nicknames")
+		self.AUS_TEAM_NICKS = self.file2list("aus_team_nicknames.txt", "australian team nicknames")
 		#print(self.AUS_TEAM_NICKS)
 		# load artist/musician list (from www.rollingstone.com)
-		self.PERFORMERS = self.__read2list("performer_list.txt", "artists")
-		self.COUNTRIES = self.__read2list("countries.txt", "world countries")
+		self.PERFORMERS = self.file2list("performer_list.txt", "artists")
+		self.COUNTRIES = self.file2list("countries.txt", "world countries")
 		# dictionary to keep all sports primary keys (pks) 
 		self.pks_dic = {sport: pd.read_csv(self.pks_fl_dic[sport], sep="\n", dtype=np.int32).drop_duplicates().ix[:,0].tolist() for sport in self.pks_fl_dic}
 		
@@ -394,7 +356,7 @@ class SportsClassifier(object):
 
 			print("found {} words that occurr only once ({}%)...".format(len(self.words_once), round(len(self.words_once)/len(self.train_dict)*100.0),1))
 			
-			self.__list2file(self.rare_words_file, self.words_once)
+			self.list2file(self.rare_words_file, self.words_once)
 
 			self.train_word_list = [str(w) for w in self.train_dict if w not in self.words_once]
 
@@ -512,6 +474,10 @@ class SportsClassifier(object):
 
 		return res_dict
 
+	def getf_month(self, month_number):
+
+		return {"@month_[{}]".format(month_number): 1}
+
 	def getf_upper(self, st):
 
 		res_dict = defaultdict(int)
@@ -554,18 +520,19 @@ class SportsClassifier(object):
 			di[pk].update(self.getf_nicks(s.event))
 			#di[pk].update(self.getf_timeofday(s.hour))
 			di[pk].update(self.getf_1g(s.event))
-			#di[pk].update(self.getf_2g(s.event))
+			di[pk].update(self.getf_2g(s.event))
 			di[pk].update(self.getf_isvs(s.event))
 			di[pk].update(self.getf_sportname(s.event))
 			di[pk].update(self.getf_burbs(s.event))
 			di[pk].update(self.getf_countries(s.event))
 			di[pk].update(self.getf_names(s.event))
 			di[pk].update(self.getf_upper(s.event))
+			di[pk].update(self.getf_month(s.month))
 	
 		# merge the original data frame with a new one created from extracted features to make one feature data frame
 
 	
-		fdf = pd.concat([d[d.columns.difference(["event", "venue"])], 
+		fdf = pd.concat([d[d.columns.difference(["event", "venue","month"])], 
 						pd.DataFrame.from_dict(di, orient='index')], axis=1, join_axes=[d.index]).fillna(0)
 
 
@@ -585,7 +552,7 @@ class SportsClassifier(object):
 			self.model_feature_names = list(fdf)
 			print("total model features...{}...ok".format(len(self.model_feature_names)))
 		
-			self.__list2file(self.model_fnames, self.model_feature_names)
+			self.list2file(self.model_fnames, self.model_feature_names)
 
 
 			ff = pd.concat([d,pd.DataFrame.from_dict(di, orient='index'),self.y_train.apply(lambda _: self.sports_decoded[_])], axis=1, join_axes=[d.index]).fillna(0)
@@ -600,7 +567,7 @@ class SportsClassifier(object):
 			now we ignore features that are not in self.model_feature_names
 			"""
 
-			print("chekcing indexes:")
+			print("checking indexes:")
 			if d.index.equals(self.y_test.index):
 				print("yes, the testing set index is OK")
 			else:
@@ -615,6 +582,20 @@ class SportsClassifier(object):
 			pd.concat([d,pd.DataFrame.from_dict(di, orient='index'),self.y_test.apply(lambda _: self.sports_decoded[_])], axis=1, join_axes=[d.index]).fillna(0).to_csv(self.TEMP_DATA_DIR + "testing_w_features.csv")
 
 		return  fdf   # returns new data frame that has feature columns attached
+
+	def select_features(self, feature_df):
+
+		from sklearn.feature_selection import VarianceThreshold
+		print("before variance threshold have {} features".format(feature_df.shape[1]))
+		selekt = VarianceThreshold(threshold=.8*(1.-.8))
+		new_feature_df = selekt.fit_transform(feature_df)
+		print("after variance threshold have {} features".format(new_feature_df.shape[1]))
+		print(new_feature_df.head())		
+
+		return new_feature_df
+
+
+
 
 	@run_and_time
 	def run_classifier(self):
@@ -690,6 +671,8 @@ if __name__ == '__main__':
 	x_ts = cl.normalize_data(cl.test_nofeatures, "testing", para="yes")
 
 	cl.test = cl.get_features(x_ts, "testing")
+
+	cl.train = cl.select_features(cl.train)
 
 	cl.run_classifier()
 

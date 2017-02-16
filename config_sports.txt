@@ -1,0 +1,9 @@
+nonsport
+afl
+soccer
+nrl
+rugby_union
+basketball
+netball
+tennis
+horse_racing
