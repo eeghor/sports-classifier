@@ -1,4 +1,12 @@
-from file_fncs import file2list, list2file, setup_dirs
+"""
+CREATE AN INPUT DATA FILE FOR SPORTS CLASSIFIER
+--- note:
+the resulting data table will have columns as below
+pk_event_dim | event | venue | month | weekday | sport
+
+"""
+
+from file_fncs import file2list, list2file, setup_dirs, enc_lst, dec_dict
 import sys
 import numpy as np
 import pandas as pd
@@ -7,8 +15,8 @@ from datetime import date, datetime
 raw_data_file, data_file = sys.argv[1:3]
 
 sports = file2list("config_sports.txt")
-sports_encoded = {sprt:indx for indx, sprt in enumerate(sports)}
-sports_decoded = {indx: sprt for sprt, indx in sports_encoded.items()}
+sports_encoded = enc_lst(sports)
+sports_decoded = dec_dict(sports_encoded)
 # weekdays as numbers
 wkdays_decoded = {1: "monday", 2: "tuesday",  3: "wednesday",
 					4: "thursday", 5: "friday", 6: "saturday", 7: "sunday"}
