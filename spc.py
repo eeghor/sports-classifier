@@ -274,7 +274,7 @@ class SportsClassifier(object):
 		di = defaultdict(lambda: defaultdict(int))
 
 		# create a corpus
-		from sklearn.feature_extraction.text import CountVectorizer
+		from sklearn.feature_extraction.text import CountVectorizer  #  implements both tokenization and occurrence counting in a single class:
 		from sklearn.feature_extraction.text import TfidfTransformer
 		from sklearn.feature_extraction.text import TfidfVectorizer
 
