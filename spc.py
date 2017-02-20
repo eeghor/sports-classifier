@@ -198,6 +198,19 @@ class SportsClassifier(object):
 
 	# 		return st
 
+	def extract_ngram_features(self, df):
+		"""
+		extract 1-,2- and so on gram features from data frame
+		"""
+		from sklearn.feature_extraction.text import TfidfVectorizer
+
+		vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b',
+										strip_accents="ascii", stop_words="english", min_df=1)
+
+		arr = vectorizer.fit_transform(df["event"] + " " + df["venue"]).toarray()
+
+		return pd.DataFrame(arr, columns=vectorizer.get_feature_names(), index=df.index)
+
 	def extract_features(self, st):
 		"""
 		extract various features from a string; note that the sring is first processed
@@ -410,6 +423,9 @@ if __name__ == '__main__':
 
 	print(cl.extract_features("st kilda recently bought a defender from sydney fc but $50,000 was not cheap for an a-league player; kookaburras however travelled to China - clearly, Anita sent Amit away with that contract, as Josh confirmed to Alex --- India v Sri LAnka today, then followed by Russian Federation vs. USA; another rugby union team here"))
 
+	gramf = cl.extract_ngram_features(cl.train_nofeatures)
+	print(gramf.head())
+	print(len(gramf))
 	dfx = cl.extract_features_from_df_parallel(cl.train_nofeatures)
 	print(dfx.columns.values)
 	new_dfx = cl.select_features(dfx)
