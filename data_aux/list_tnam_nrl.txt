@@ -1,0 +1,2 @@
+tnam_australia_telstra_premiership.txt
+tnam_australia_state_of_origin.txt

@@ -1,0 +1,29 @@
+matildas - soccer
+wallabies - rugby_union
+wallaroos - rugby_union
+kangaroos - nrl
+jillaroos - rugby_union
+socceroos - soccer
+olyroos - olympic_soccer
+futsalroos - futsal
+diamonds - netball
+baggy greens - cricket
+dolphins - swimming
+sharks - water_polo
+stingers - water_polo
+boomers - basketball
+opals - basketball
+crocs - u21_basketball
+sapphires - u21_basketball
+cyclones - cycling
+hockeyroos - field_hockey
+kookaburras - field_hockey
+mighty roos - ice_hockey
+mighty jills - ice_hockey
+boxaroos - box_lacrosse
+crocodiles - handball
+redbacks - handball
+cockatoos - tennis
+volleyroos - volleyball
+southern thunder - baseball
+emeralds - baseball

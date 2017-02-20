@@ -1,0 +1,2 @@
+tnam_australia_national_rugby_championship.txt
+tnam_australia_super_rugby.txt

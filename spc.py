@@ -273,21 +273,31 @@ class SportsClassifier(object):
 
 		di = defaultdict(lambda: defaultdict(int))
 
-		# create a corpus
-		from sklearn.feature_extraction.text import CountVectorizer  #  implements both tokenization and occurrence counting in a single class:
-		from sklearn.feature_extraction.text import TfidfTransformer
+		from sklearn.feature_extraction.text import CountVectorizer  #  
 		from sklearn.feature_extraction.text import TfidfVectorizer
-
-		transformer = TfidfTransformer(smooth_idf=False)
-		
+		# create a corpus from both event and venue fields		
 		corpus = []
 
 		for st in itertools.chain.from_iterable([df["event"], df["venue"]]):
 			corpus.append(st.lower())
 
-		bigram_vectorizer = CountVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b', min_df=1)
+		#print("documents in corpus:",len(corpus))
+		bigram_vectorizer = CountVectorizer(ngram_range=(1, 2), 
+			token_pattern=r'\b\w+\b', 
+			strip_accents="ascii", 
+			stop_words="english", 
+			min_df=1)  #  ignore terms that have a document frequency strictly higher than the given threshold
+		# fit : Learn a vocabulary dictionary of all tokens in the raw documents
+		# transform: Transform documents to document-term matrix
+		# fit_transform : Learn the vocabulary dictionary and return term-document matrix. This is equivalent to fit followed by transform, but more efficiently implemented
 		X = bigram_vectorizer.fit_transform(corpus).toarray()
-
+		vectorizer = TfidfVectorizer(ngram_range=(1, 2), 
+			token_pattern=r'\b\w+\b', 
+			strip_accents="ascii", 
+			stop_words="english", 
+			min_df=1)
+		vectorizer.fit_transform(corpus)
+		#print("vectorised corpus:",X)
 		for i, s in enumerate(df.itertuples()):  
 			full_descr = s.event + " " + s.venue
 			if full_descr.strip():
