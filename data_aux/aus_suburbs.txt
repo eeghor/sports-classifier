@@ -20,7 +20,7 @@ ormiston
 talawa
 howqua
 depot hill
-royal brisbanehospital
+royal brisbane hospital
 east side
 karramomus
 ilford
@@ -352,7 +352,7 @@ hawthorn
 hackett
 loch valley
 bevendale
-moore river nationalpark
+moore river national park
 merton
 georgina
 bentley park
@@ -709,7 +709,7 @@ linley point
 mardi
 wattle hill
 bland
-avon valley nationalpark
+avon valley national park
 milora
 comberton
 driffield
@@ -847,7 +847,7 @@ numbaa
 bealiba
 newnham
 girvan
-doctor georgemountain
+doctor george mountain
 boorga
 mount sabine
 kernot
@@ -1040,7 +1040,7 @@ wroxham
 dalgety
 haystack
 lake cathie
-sydney domesticairport
+sydney domestic airport
 bletchley
 river heads
 park avenue
@@ -1441,7 +1441,6 @@ benarkin
 brownsville
 kunioon
 arbuckle
-m924-n1144perth
 broadwood
 seaford
 minore
@@ -1745,7 +1744,7 @@ benambra
 serpentine
 bolaro
 yarrawalla
-helensvale towncentre
+helensvale town centre
 airport west
 breakwater
 dululu
@@ -1852,7 +1851,7 @@ tummaville
 pinkawillinie
 port rickaby
 ball bay
-forster shoppingvillage
+forster shopping village
 cornwall
 wattle camp
 clyde
@@ -2389,7 +2388,6 @@ tinana south
 she oaks
 main ridge
 dumosa
-x2200-x2311perth
 isaacs
 boscabel
 herrick
@@ -2827,7 +2825,7 @@ pinks beach
 swanport
 raworth
 trebonne
-north stradbrokeisland
+north stradbroke island
 leslie
 north cape
 moorilim
@@ -2972,7 +2970,8 @@ drumborg
 cooladdi
 huon
 barney view
-a1-a48purnim west
+purnim west
+perth
 tully heads
 natone
 wonuarra
@@ -3116,7 +3115,7 @@ sunnyvale
 st marys
 cuttaburra
 gillimanning
-bogong peakswilderness
+bogong peaks wilderness
 clara creek
 edderton
 hebersham
@@ -3144,7 +3143,6 @@ sandsprings
 rosanna
 turrawan
 deer vale
-s1291-u1997perth
 eighteen mile
 weering
 metford
@@ -3178,7 +3176,7 @@ kilburn north
 reid
 albion
 gowan
-healesville mainstreet
+healesville main street
 ruffy
 bundamba
 thornton
@@ -3222,7 +3220,7 @@ cundare
 maltee
 rufus
 glanmire
-brisbane adelaidestreet
+brisbane adelaide street
 balldale
 lorinna
 narrandera
@@ -3344,7 +3342,7 @@ moondarra
 gooroolba
 upper freestone
 cuballing
-australian nationaluniversity
+australian national university
 mooroopna northwest
 dulwich
 cross roads
@@ -3598,7 +3596,7 @@ wollomombi
 umuwa
 gosnells
 helena valley
-canning bridgeapplecross
+canning bridge applecross
 leigh creek
 arno bay
 dooralong
@@ -3689,7 +3687,7 @@ cowwarr
 breddan
 wean
 quellington
-toowoomba villagefair
+toowoomba village fair
 glenthorne
 chandada
 north ryde
@@ -3908,7 +3906,7 @@ pine grove
 bonn
 wilston
 darlow
-lamington nationalpark
+lamington national park
 goroke
 steppes
 swan reach
@@ -4056,7 +4054,7 @@ saltia
 licola north
 tralee
 point vernon
-queen victoriabuilding
+queen victoria building
 commodine
 penna
 kilbirnie
@@ -4401,7 +4399,6 @@ herdsman
 ocean view
 shaw
 park grove
-e201-h629perth
 limevale
 dumaresq
 goomeri
@@ -4686,7 +4683,7 @@ upper swan
 rhydding
 brendale bc
 mount richon
-walyunga nationalpark
+walyunga national park
 lords hill
 wannon
 myaree
@@ -5835,7 +5832,6 @@ temagog
 hebden
 erin vale
 kyalite
-d141-d200perth
 murrulebale
 creewah
 coongulla
@@ -6003,7 +5999,6 @@ moonem
 simson
 mount jagged
 nook
-j630-l923perth
 lake george
 carwarp
 innisplain
@@ -6137,7 +6132,7 @@ runcorn
 lajamanu
 wardell
 useless loop
-charles darwinuniversity
+charles darwin university
 cranebrook
 grassdale
 yambulla
@@ -6213,7 +6208,7 @@ redesdale
 onslow
 gormanston
 crabtree
-sydney internationalairport
+sydney international airport
 the keppels
 arthurton
 harrogate
@@ -6281,7 +6276,7 @@ eccleston
 whitsundays
 granadilla
 attadale
-younghusbandholdings
+younghusband holdings
 forest land
 julia
 oran park
@@ -6657,7 +6652,7 @@ mount horner
 wonnerup
 warneet
 veitch
-royal australian navywarships
+royal australian navy warships
 murmungee
 inkerman
 stubbo
@@ -6910,7 +6905,7 @@ botany
 tallegalla
 chuwar
 gladfield
-warriewood shoppingsquare
+warriewood shopping square
 aeroglen
 clements gap
 tarwin
@@ -7065,7 +7060,7 @@ wakerley
 bonbeach
 thule
 king valley
-north sydney shoppingworld
+north sydney shopping world
 the dimonds
 boggabri
 dry diggings
@@ -7513,7 +7508,7 @@ petford
 elliston
 banksiadale
 eatonsville
-shellharbour citycentre
+shellharbour city centre
 mondure
 perth bc
 bundoora
@@ -7613,7 +7608,7 @@ pearl beach
 mirimbah
 rolleston
 marola
-stun’sail boom
+stun'sail boom
 greenhills
 boonerdo
 johns river
@@ -8396,7 +8391,6 @@ fairney view
 merino
 gum flat
 ernabella
-c97-c140perth
 avenue range
 binnum
 beacon
@@ -8542,7 +8536,7 @@ cairns dc
 mangalore
 killabakh
 ellis beach
-burra easterndistricts
+burra eastern districts
 glenloth
 tewkesbury
 tittybong
@@ -9217,7 +9211,6 @@ tylden
 millswood
 bulong
 koojan
-p1145-r1290perth
 boorowa
 redpa
 wee waa
@@ -9355,7 +9348,7 @@ waarre
 pallamana
 virginia bc
 kinglake
-karratha industrialestate
+karratha industrial estate
 irymple
 glenmaggie
 crestmead
@@ -9952,7 +9945,7 @@ west woombye
 morchard
 liddell
 lucknow
-royal north shorehospital
+royal north shore hospital
 cleveland dc
 nannup
 cambra
@@ -10273,7 +10266,7 @@ runnyford
 mayfield
 cambewarra village
 camballin
-royal melbournehospital
+royal melbourne hospital
 boralma
 worrowing
 cooee bay
@@ -10647,7 +10640,7 @@ gretna
 nindaroo
 merotherie
 east nannup
-mitcham shoppingcentre
+mitcham shopping centre
 lort river
 australind
 lower portland
@@ -10673,7 +10666,7 @@ spalding
 patho
 pacific palms
 mountain gate
-charles sturtuniversity
+charles sturt university
 myalup
 dows creek
 kringin
@@ -10720,7 +10713,6 @@ mckail
 railton
 riggs creek
 karabeal
-w1998-w2109 perth
 katamatite
 ivanhoe
 langi kal kal
@@ -10783,7 +10775,6 @@ kealy
 petherick
 mokepilly
 hudson
-b49-b96perth
 thredbo
 auldana
 broxburn
@@ -11527,7 +11518,7 @@ tarraganda
 york town
 redfern
 venus bay
-mount barkerjunction
+mount barker junction
 lucaston
 wedgecarrup
 narrawa
