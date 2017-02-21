@@ -178,40 +178,8 @@ class SportsClassifier(object):
 		print("training set: {} rows ({}%)".format(nrows_train, round(100*nrows_train/nrows_orig,1)))
 		print("testing set: {} rows ({}%)".format(nrows_test, round(100*nrows_test/nrows_orig,1)))
 
-	# def __prelabel_from_list(self, st, lst,lab,min_words):
 
-	# 		c = set([v for w in lst for v in w.split()]) & set(st.split())
-
-	# 		if c:
-	# 			for s in c:
-	# 				for l in lst:
-	# 					if l.startswith(s):  # there is a chance..
-
-	# 						if (l in st) and ((len(l.split()) > min_words - 1) or ("-" in l)):
-	# 							st = st.replace(l,lab)
-	# 						else:
-	# 							pass
-	# 					else:
-	# 						pass
-	# 		else:
-	# 			pass
-
-	# 		return st
-
-	def extract_ngram_features(self, df):
-		"""
-		extract 1-,2- and so on gram features from data frame
-		"""
-		from sklearn.feature_extraction.text import TfidfVectorizer
-
-		vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b',
-										strip_accents="ascii", stop_words="english", min_df=1)
-
-		arr = vectorizer.fit_transform(df["event"] + " " + df["venue"]).toarray()
-
-		return pd.DataFrame(arr, columns=vectorizer.get_feature_names(), index=df.index)
-
-	def extract_features(self, st):
+	def get_dict_features(self, st):
 		"""
 		extract various features from a string; note that the sring is first processed
 		"""
@@ -234,7 +202,7 @@ class SportsClassifier(object):
 					for t1m in self.team_names[sport][comp]:
 						if t1m in st:
 							st_features["@{}_TEAM_NAME".format(sport)] += 1
-			# comp name features
+			# compextract_features name features
 			for sport in self.comp_names:
 				for comp in self.comp_names[sport]:
 					if comp	in st:
@@ -282,7 +250,7 @@ class SportsClassifier(object):
 
 		return st_features
 
-	def extract_features_from_df(self, df):
+	def get_dict_features_from_df(self, df):
 
 		di = defaultdict(lambda: defaultdict(int))
 
@@ -314,20 +282,20 @@ class SportsClassifier(object):
 		for i, s in enumerate(df.itertuples()):  
 			full_descr = s.event + " " + s.venue
 			if full_descr.strip():
-				di[s.Index].update(self.extract_features(full_descr))
+				di[s.Index].update(self.get_dict_features(full_descr))
 
 		# columns are event | venue | month | weekday | sport
 
 		return di
 			
 	@run_and_time
-	def extract_features_from_df_parallel(self, df, nworkers=8):
+	def get_dict_features_from_df_parallel(self, df, nworkers=8):
 
 		print("extracting features...")
 		
 		df_split = np.array_split(df, nworkers)
 		pool = Pool(nworkers)
-		res_dicts = pool.map(self.extract_features_from_df, df_split)
+		res_dicts = pool.map(self.get_dict_features_from_df, df_split)
 		pool.close() #  informs the processor that no new tasks will be added to the pool
 		pool.join()  # stops and waits for all of the results to be finished and collected before proceeding with the rest of 
 
@@ -338,79 +306,40 @@ class SportsClassifier(object):
 			for k,v in dic.items():
 				big_dic[k] = v
 
-		return pd.concat([pd.get_dummies(df[df.columns.difference(["event", "venue"])], prefix="@", columns=["month","weekday"]), pd.DataFrame.from_dict(big_dic, orient='index')], axis=1, join_axes=[df.index]).fillna(0.)
-
-	def select_features(self, feature_df):
-
-		from sklearn.feature_selection import VarianceThreshold
-		print("before variance threshold have {} features".format(feature_df.shape[1]))
-		selekt = VarianceThreshold(threshold=.8*(1.-.8))
-		#print(pd.isnull(feature_df))
-
-		new_feature_df = selekt.fit_transform(feature_df)
-		print("after variance threshold have {} features".format(new_feature_df.shape[1]))
-		print(new_feature_df)
-
-		return new_feature_df
+		return pd.concat([pd.get_dummies(df[df.columns.difference(["event", "venue"])], 
+			prefix="@", columns=["month","weekday"]), pd.DataFrame.from_dict(big_dic, orient='index')], 
+				axis=1, join_axes=[df.index]).fillna(0.)
 
 
+	@run_and_time
+	def run_classifier(self):
+
+		print("[training model]")
+
+		from sklearn.multiclass import OneVsRestClassifier
+		from sklearn.svm import LinearSVC
+		from sklearn.metrics import accuracy_score
+		from sklearn.model_selection import GridSearchCV
+
+		forest_parameters = {"max_features": [None, "log2"],
+							"n_estimators": [200,300,500],
+							"n_jobs":[2,-1],
+							"max_depth":[2]}
 
 
-	# @run_and_time
-	# def run_classifier(self):
+		forest = RandomForestClassifier()
 
-	# 	print("[training model]")
+		classifier = GridSearchCV(forest, forest_parameters)
 
-	# 	from sklearn.multiclass import OneVsRestClassifier
-	# 	from sklearn.svm import LinearSVC
-	# 	from sklearn.metrics import accuracy_score
-	# 	from sklearn.model_selection import GridSearchCV
+		classifier = forest
 
-	# 	#classifier = OneVsRestClassifier(LinearSVC(random_state=0))
-	# 	forest_parameters = {"max_features": [None, "log2"],
-	# 						"n_estimators": [200,300,500],
-	# 						"n_jobs":[2,-1],
-	# 						"max_depth":[2]}
+		print("chekcing indexes in PREDICTION:")
+		if self.train.index.equals(self.y_train.index):
+			print("yes, the training set index is OK")
+		else:
+			sys.exit("WRONG INDEX in trainng set!!")
 
-
-	# 	forest = RandomForestClassifier()
-	# 	#forest = RandomForestClassifier(max_features=None, n_estimators=200,n_jobs=-1)
-	
-	# 	#classifier = OneVsRestClassifier(RandomForestClassifier(n_estimators=50))
-
-	# 	classifier = GridSearchCV(forest, forest_parameters)
-
-	# 	classifier = forest
-
-	# 	print("chekcing indexes in PREDICTION:")
-	# 	if self.train.index.equals(self.y_train.index):
-	# 		print("yes, the training set index is OK")
-	# 	else:
-	# 		sys.exit("WRONG INDEX in trainng set!!")
-
-	# 	classifier.fit(self.train, self.y_train)
-
-	# 	dill.dump(classifier, open("trained_model.dill","w"))
-
-	# 	pred_train = pd.Series(classifier.predict(self.train), index=self.train.index, name="predicted_sport")
-	# 	print("real:",self.y_train[:5])
-	# 	print("predincted:",pred_train[:5])
-
-	# 	print("TRAINING accuracy:", round(accuracy_score(self.y_train, pred_train),2))
-
-
-	# 	y_pred = pd.Series(classifier.predict(self.test), index=self.test.index, name="sport_p")
-
-	# 	print("real:", self.y_test[:5])
-	# 	print("predicted:",y_pred[:5])
-
-	# 	pd.concat([self.test_nofeatures,self.test,self.y_test.apply(lambda _: self.sports_decoded[_]),y_pred.apply(lambda _: self.sports_decoded[_])], axis=1).fillna(0).to_csv(self.TEMP_DATA_DIR + "testing_report.csv")
-
-	# 	print("TESTING accuracy:", round(accuracy_score(self.y_test, y_pred),2))
-	# 	# .apply(lambda _: self.sports_decoded[_]
-	# 	# save the predictions to file
-	# 	pd.concat([self.test, y_pred], axis=1, join="inner").to_csv(self.predictions_test_file)
-
+		classifier.fit(self.train, self.y_train)
 		
 
 
@@ -421,26 +350,51 @@ if __name__ == '__main__':
 	
 	cl.make_train_test()
 
-	print(cl.extract_features("st kilda recently bought a defender from sydney fc but $50,000 was not cheap for an a-league player; kookaburras however travelled to China - clearly, Anita sent Amit away with that contract, as Josh confirmed to Alex --- India v Sri LAnka today, then followed by Russian Federation vs. USA; another rugby union team here"))
+	from sklearn.feature_selection import SelectKBest
+	from sklearn.feature_selection import chi2
+	from sklearn.metrics import accuracy_score
+	# univariate feature selection
+	from sklearn.feature_extraction.text import TfidfVectorizer
 
-	gramf = cl.extract_ngram_features(cl.train_nofeatures)
-	print(gramf.head())
-	print(len(gramf))
-	dfx = cl.extract_features_from_df_parallel(cl.train_nofeatures)
-	print(dfx.columns.values)
-	new_dfx = cl.select_features(dfx)
+	vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b',
+										strip_accents="ascii", stop_words="english", min_df=1)
 
-	# x_tr = cl.normalize_data(cl.train_nofeatures, "training", para="yes")
+	# return pd.DataFrame(vectorizer.fit_transform(df["event"] + " " + df["venue"]).toarray(), 
+	# 				columns=vectorizer.get_feature_names(), 
+	# 				index=df.index)
 
-	# cl.train = cl.get_features(x_tr, "training")
 
-	# x_ts = cl.normalize_data(cl.test_nofeatures, "testing", para="yes")
 
-	# cl.test = cl.get_features(x_ts, "testing")
 
-	# cl.train = cl.select_features(cl.train)
+	X_train = vectorizer.fit_transform(cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"], cl.y_train)
+	print("X_train is ",X_train.shape)
+	X_test = vectorizer.transform(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
 
-	# cl.run_classifier()
+	chi2 = SelectKBest(chi2, k=100)
+	X_train = chi2.fit_transform(X_train, cl.y_train)
+	print("after chi2 X_train is ",X_train.shape)
+	X_test = chi2.transform(X_test)   # note: no fitting, only transform
+
+	from sklearn.ensemble import RandomForestClassifier
+	forest = RandomForestClassifier()
+
+	forest.fit(X_train, cl.y_train)
+	print("fitted random forest..")
+	y_predicted = forest.predict(X_test)
+
+	print("accuracy:", accuracy_score(cl.y_test, y_predicted))
+	
+
+
+
+	#cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
+
+	# full features
+	#f1chrs = pd.concat([gramf, dfx], axis=1, join="inner")
+	#print(f1chrs.info())
+
+	# print("running feature selection...")
+	# new_dfx = cl.select_features(gramf)
 
 
 
