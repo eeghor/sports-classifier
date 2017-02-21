@@ -359,6 +359,7 @@ if __name__ == '__main__':
 	from sklearn.decomposition import PCA
 	from sklearn.pipeline import Pipeline, FeatureUnion
 	from sklearn.ensemble import RandomForestClassifier
+	from sklearn.metrics import classification_report
 
 	vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b', binary=True,
 										strip_accents="ascii", stop_words="english", min_df=1)
@@ -389,7 +390,7 @@ if __name__ == '__main__':
 
 	param_grid = dict(features__chi2__k=np.arange(50,2050,100).tolist(),
 						pca__n_components=np.arange(40,200,40).tolist(),
-                  		forest__n_estimators=np.arange(20,200,20).tolist())
+                  		forest__n_estimators=np.arange(20,100,20).tolist())
 
 	grid_search = GridSearchCV(pipeline, param_grid=param_grid, verbose=10)
 	grid_search.fit(X_train, cl.y_train)
