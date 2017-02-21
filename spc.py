@@ -356,8 +356,11 @@ if __name__ == '__main__':
 	from sklearn.metrics import accuracy_score
 	# univariate feature selection
 	from sklearn.feature_extraction.text import TfidfVectorizer
+	from sklearn.decomposition import PCA
+	from sklearn.pipeline import Pipeline, FeatureUnion
+	from sklearn.ensemble import RandomForestClassifier
 
-	vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b',
+	vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b', binary=True,
 										strip_accents="ascii", stop_words="english", min_df=1)
 
 	# return pd.DataFrame(vectorizer.fit_transform(df["event"] + " " + df["venue"]).toarray(), 
@@ -370,48 +373,66 @@ if __name__ == '__main__':
 	X_train = vectorizer.fit_transform(cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"], cl.y_train)
 	X_test = vectorizer.transform(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
 
-	chi2 = SelectKBest(chi2, k=5000)
+	chi2 = SelectKBest(chi2, k=2000)
+	pca = PCA(n_components=100)
 
-	X_train = chi2.fit_transform(X_train, cl.y_train)
-	X_test = chi2.transform(X_test)   # note: no fitting, only transform
+	#X_train = chi2.fit_transform(X_train, cl.y_train)
 
-	X_dicf_df = cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
-	cl.model_feature_names = list(X_dicf_df)
-
-	X_train = sparse.hstack((X_train, X_dicf_df.as_matrix()))
-
-	X_dicf = cl.get_dict_features_from_df_parallel(cl.test_nofeatures)
+	combined_features = FeatureUnion([("pca", pca), ("chi2", chi2)])
 	
-	tokeep = []
-
-	for c in cl.model_feature_names:
-		if c not in X_dicf.columns.values:
-			X_dicf[c] = 0
-			tokeep.append(c)
-		else:
-			tokeep.append(c)
-
-	X_test = sparse.hstack((X_test, X_dicf[tokeep].as_matrix()))
-
-	from sklearn.ensemble import RandomForestClassifier
-
-	from sklearn.model_selection import GridSearchCV
-
-	forest_parameters = {"max_features": [None, "log2"],
-						"n_estimators": [100,200,500],
-						"n_jobs":[2,-1],
-						"max_depth":[2]}
-
-
+	X_train = combined_features.fit(X_train.toarray(), cl.y_train).transform(X_train)
+	
 	forest = RandomForestClassifier()
 
-	classifier = GridSearchCV(forest, forest_parameters)
+	pipeline = Pipeline([("features", combined_features), ("forest", forest)])
+	#X_test = chi2.transform(X_test)   # note: no fitting, only transform
+
+	param_grid = dict(features__chi2__k=np.arange(50,2050,100).tolist(),
+						pca__n_components=np.arange(40,200,40).tolist(),
+                  		forest__n_estimators=np.arange(20,200,20).tolist())
+
+	grid_search = GridSearchCV(pipeline, param_grid=param_grid, verbose=10)
+	grid_search.fit(X_train, cl.y_train)
+	print(grid_search.best_estimator_)
+
+	#X_dicf_df = cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
+	#cl.model_feature_names = list(X_dicf_df)
+
+	#X_train = sparse.hstack((X_train, X_dicf_df.as_matrix()))
+
+	#X_dicf = cl.get_dict_features_from_df_parallel(cl.test_nofeatures)
+	
+	# tokeep = []
+
+	# for c in cl.model_feature_names:
+	# 	if c not in X_dicf.columns.values:
+	# 		X_dicf[c] = 0
+	# 		tokeep.append(c)
+	# 	else:
+	# 		tokeep.append(c)
+
+	# X_test = sparse.hstack((X_test, X_dicf[tokeep].as_matrix()))
+
+	
+
+	#from sklearn.model_selection import GridSearchCV
+
+	#forest_parameters = {"max_features": [None, "log2"],
+	#					"n_estimators": np.arange(50,500,50).tolist(),
+#						"n_jobs":[2,-1],
+	#					"max_depth":[2]}
+
+
+	#forest = RandomForestClassifier()
+
+	#classifier = GridSearchCV(forest, forest_parameters)
 
 
 
-	classifier.fit(X_train, cl.y_train)
-	print("fitted random forest..")
-	y_predicted = classifier.predict(X_test)
+	# classifier.fit(X_train, cl.y_train)
+	# forest.fit(X_train, cl.y_train)
+	# print("fitted random forest..")
+	# y_predicted = forest.predict(X_test)
 
 	print("accuracy:", round(accuracy_score(cl.y_test, y_predicted),3))
 
