@@ -8,6 +8,8 @@ import time
 from datetime import datetime as dt
 import itertools
 
+from scipy import sparse
+import dill
 
 #from sklearn.ensemble import RandomForestClassifier
 
@@ -181,7 +183,7 @@ class SportsClassifier(object):
 
 	def get_dict_features(self, st):
 		"""
-		extract various features from a string; note that the sring is first processed
+		extract various features from a string; note that the string is first processed
 		"""
 	
 		st_features = defaultdict(int)
@@ -247,44 +249,43 @@ class SportsClassifier(object):
 				if sport.replace("_"," ") in st:
 					st_features["@SPORT_NAME_{}".format(sport)] += 1
 
-
 		return st_features
 
 	def get_dict_features_from_df(self, df):
 
 		di = defaultdict(lambda: defaultdict(int))
 
-		from sklearn.feature_extraction.text import CountVectorizer  #  
-		from sklearn.feature_extraction.text import TfidfVectorizer
-		# create a corpus from both event and venue fields		
-		corpus = []
+		# from sklearn.feature_extraction.text import CountVectorizer  #  
+		# from sklearn.feature_extraction.text import TfidfVectorizer
+		# # create a corpus from both event and venue fields		
+		# corpus = []
 
-		for st in itertools.chain.from_iterable([df["event"], df["venue"]]):
-			corpus.append(st.lower())
+		# for st in itertools.chain.from_iterable([df["event"], df["venue"]]):
+		# 	corpus.append(st.lower())
 
-		#print("documents in corpus:",len(corpus))
-		bigram_vectorizer = CountVectorizer(ngram_range=(1, 2), 
-			token_pattern=r'\b\w+\b', 
-			strip_accents="ascii", 
-			stop_words="english", 
-			min_df=1)  #  ignore terms that have a document frequency strictly higher than the given threshold
-		# fit : Learn a vocabulary dictionary of all tokens in the raw documents
-		# transform: Transform documents to document-term matrix
-		# fit_transform : Learn the vocabulary dictionary and return term-document matrix. This is equivalent to fit followed by transform, but more efficiently implemented
-		X = bigram_vectorizer.fit_transform(corpus).toarray()
-		vectorizer = TfidfVectorizer(ngram_range=(1, 2), 
-			token_pattern=r'\b\w+\b', 
-			strip_accents="ascii", 
-			stop_words="english", 
-			min_df=1)
-		vectorizer.fit_transform(corpus)
+		# #print("documents in corpus:",len(corpus))
+		# bigram_vectorizer = CountVectorizer(ngram_range=(1, 2), 
+		# 	token_pattern=r'\b\w+\b', 
+		# 	strip_accents="ascii", 
+		# 	stop_words="english", 
+		# 	min_df=1)  #  ignore terms that have a document frequency strictly higher than the given threshold
+		# # fit : Learn a vocabulary dictionary of all tokens in the raw documents
+		# # transform: Transform documents to document-term matrix
+		# # fit_transform : Learn the vocabulary dictionary and return term-document matrix. This is equivalent to fit followed by transform, but more efficiently implemented
+		# X = bigram_vectorizer.fit_transform(corpus).toarray()
+		# vectorizer = TfidfVectorizer(ngram_range=(1, 2), 
+		# 	token_pattern=r'\b\w+\b', 
+		# 	strip_accents="ascii", 
+		# 	stop_words="english", 
+		# 	min_df=1)
+		# vectorizer.fit_transform(corpus)
 		#print("vectorised corpus:",X)
 		for i, s in enumerate(df.itertuples()):  
 			full_descr = s.event + " " + s.venue
 			if full_descr.strip():
 				di[s.Index].update(self.get_dict_features(full_descr))
 
-		# columns are event | venue | month | weekday | sport
+		#columns are event | venue | month | weekday | sport
 
 		return di
 			
@@ -311,35 +312,35 @@ class SportsClassifier(object):
 				axis=1, join_axes=[df.index]).fillna(0.)
 
 
-	@run_and_time
-	def run_classifier(self):
+	# @run_and_time
+	# def run_classifier(self):
 
-		print("[training model]")
+	# 	print("[training model]")
 
-		from sklearn.multiclass import OneVsRestClassifier
-		from sklearn.svm import LinearSVC
-		from sklearn.metrics import accuracy_score
-		from sklearn.model_selection import GridSearchCV
+	# 	from sklearn.multiclass import OneVsRestClassifier
+	# 	from sklearn.svm import LinearSVC
+	# 	from sklearn.metrics import accuracy_score
+	# 	from sklearn.model_selection import GridSearchCV
 
-		forest_parameters = {"max_features": [None, "log2"],
-							"n_estimators": [200,300,500],
-							"n_jobs":[2,-1],
-							"max_depth":[2]}
+		# forest_parameters = {"max_features": [None, "log2"],
+		# 					"n_estimators": [200,300,500],
+		# 					"n_jobs":[2,-1],
+		# 					"max_depth":[2]}
 
 
-		forest = RandomForestClassifier()
+	# 	forest = RandomForestClassifier()
 
-		classifier = GridSearchCV(forest, forest_parameters)
+	# 	classifier = GridSearchCV(forest, forest_parameters)
 
-		classifier = forest
+	# 	classifier = forest
 
-		print("chekcing indexes in PREDICTION:")
-		if self.train.index.equals(self.y_train.index):
-			print("yes, the training set index is OK")
-		else:
-			sys.exit("WRONG INDEX in trainng set!!")
+	# 	print("checking indexes in PREDICTION:")
+	# 	if self.train.index.equals(self.y_train.index):
+	# 		print("yes, the training set index is OK")
+	# 	else:
+	# 		sys.exit("WRONG INDEX in trainng set!!")
 
-		classifier.fit(self.train, self.y_train)
+	# 	classifier.fit(self.train, self.y_train)
 		
 
 
@@ -367,34 +368,55 @@ if __name__ == '__main__':
 
 
 	X_train = vectorizer.fit_transform(cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"], cl.y_train)
-	print("X_train is ",X_train.shape)
 	X_test = vectorizer.transform(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
 
-	chi2 = SelectKBest(chi2, k=100)
+	chi2 = SelectKBest(chi2, k=5000)
+
 	X_train = chi2.fit_transform(X_train, cl.y_train)
-	print("after chi2 X_train is ",X_train.shape)
 	X_test = chi2.transform(X_test)   # note: no fitting, only transform
 
+	X_dicf_df = cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
+	cl.model_feature_names = list(X_dicf_df)
+
+	X_train = sparse.hstack((X_train, X_dicf_df.as_matrix()))
+
+	X_dicf = cl.get_dict_features_from_df_parallel(cl.test_nofeatures)
+	
+	tokeep = []
+
+	for c in cl.model_feature_names:
+		if c not in X_dicf.columns.values:
+			X_dicf[c] = 0
+			tokeep.append(c)
+		else:
+			tokeep.append(c)
+
+	X_test = sparse.hstack((X_test, X_dicf[tokeep].as_matrix()))
+
 	from sklearn.ensemble import RandomForestClassifier
+
+	from sklearn.model_selection import GridSearchCV
+
+	forest_parameters = {"max_features": [None, "log2"],
+						"n_estimators": [100,200,500],
+						"n_jobs":[2,-1],
+						"max_depth":[2]}
+
+
 	forest = RandomForestClassifier()
 
-	forest.fit(X_train, cl.y_train)
+	classifier = GridSearchCV(forest, forest_parameters)
+
+
+
+	classifier.fit(X_train, cl.y_train)
 	print("fitted random forest..")
-	y_predicted = forest.predict(X_test)
+	y_predicted = classifier.predict(X_test)
 
-	print("accuracy:", accuracy_score(cl.y_test, y_predicted))
+	print("accuracy:", round(accuracy_score(cl.y_test, y_predicted),3))
+
+	#dill.dump(classifier, open("model.dill","w"))
 	
-
-
-
-	#cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
-
-	# full features
-	#f1chrs = pd.concat([gramf, dfx], axis=1, join="inner")
-	#print(f1chrs.info())
-
-	# print("running feature selection...")
-	# new_dfx = cl.select_features(gramf)
 
 
 
