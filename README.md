@@ -1,2 +1,2 @@
-# sports-classifyer
-Train a model to figure out what sport is referred to in a string.
+# Sports Classifier
+Suppose we have a description of some event that may or may not be related to sports. We want classify every such description as being about a particular type of sport or something completely different.
