@@ -11,6 +11,7 @@ import itertools
 from scipy import sparse
 import dill
 
+from sklearn.base import BaseEstimator, TransformerMixin
 #from sklearn.ensemble import RandomForestClassifier
 
 
@@ -153,8 +154,6 @@ class SportsClassifier(object):
 		for sport in self.sports:
 			self.comp_name_words[sport] = list({w.strip() for comp in self.comp_names[sport]  for w in comp.split() if (w.strip() not in self.STPW) and len(w.strip()) > 2})
 		
-
-		print("done")  # when initialisation is done
 	
 	def make_train_test(self, ptest=0.3):
 		"""
@@ -165,7 +164,7 @@ class SportsClassifier(object):
 		and we use pk_event_dim as index
 
 		"""
-		print("training and testing sets w/o extracted features...")
+		# print("training and testing sets w/o extracted features...")
 
 		features = self.data.loc[:, u"event venue month weekday".split()]
 		target = self.data[u"sport"]
@@ -342,7 +341,26 @@ class SportsClassifier(object):
 
 	# 	classifier.fit(self.train, self.y_train)
 		
+class words_ending_s_ft(BaseEstimator, TransformerMixin):
 
+	def __init__(self):
+		pass  # do nothing
+
+	def count_s_endings(self, st):
+		# count how many words in the string have ending "s"
+		c = 0
+		for word in st.lower().split():
+			if word.strip() and word.strip()[-1] == "s":
+				c += 1
+		return c
+
+	def transform(self, df, y=None):
+		out = df.apply(self.count_s_endings).values
+		out = out.reshape(out.shape[0],1)
+		return  out  # pandas column with numbers of s endings
+
+	def fit(self, df, y=None):
+		return self
 
 if __name__ == '__main__':
 
@@ -361,40 +379,55 @@ if __name__ == '__main__':
 	from sklearn.ensemble import RandomForestClassifier
 	from sklearn.metrics import classification_report
 
-	vectorizer = TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b', binary=True,
-										strip_accents="ascii", stop_words="english", min_df=1)
+	"""
+	set up a pipeline:
+		- no need to generate any features, only provide the training set as is along with the target column
+		- works with pandas columns, no conversion to numpy arrays needee
+		- same for testing: need the testing set as is and the target
+	"""
+	ppl = Pipeline([("ext_features", 
+						FeatureUnion([("ngrams", TfidfVectorizer(ngram_range=(1, 2), token_pattern=r'\b\w+\b', binary=True,
+										strip_accents="ascii", stop_words="english", min_df=1)),
+										("s_endings", words_ending_s_ft())])), 
+					("classifier", RandomForestClassifier())])
 
-	# return pd.DataFrame(vectorizer.fit_transform(df["event"] + " " + df["venue"]).toarray(), 
-	# 				columns=vectorizer.get_feature_names(), 
-	# 				index=df.index)
+	ppl.set_params(classifier__n_estimators=200)
 
+	data_train = cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"]
+	
+	print("training the model...", end="")
 
+	t0 = time.time()
+	model = ppl.fit(data_train, cl.y_train)
+	print("ok")
+	print("elapsed time: {:.1f} seconds".format(time.time() - t0))
+	
+	y_pred = model.predict(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
 
+	# X_train = vectorizer.fit_transform(cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"], cl.y_train)
+	# X_test = vectorizer.transform(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
 
-	X_train = vectorizer.fit_transform(cl.train_nofeatures["event"] + " " + cl.train_nofeatures["venue"], cl.y_train)
-	X_test = vectorizer.transform(cl.test_nofeatures["event"] + " " + cl.test_nofeatures["venue"])
-
-	chi2 = SelectKBest(chi2, k=2000)
-	pca = PCA(n_components=100)
+	# chi2 = SelectKBest(chi2, k=2000)
+	# pca = PCA(n_components=100)
 
 	#X_train = chi2.fit_transform(X_train, cl.y_train)
 
-	combined_features = FeatureUnion([("pca", pca), ("chi2", chi2)])
+	# combined_features = FeatureUnion([("pca", pca), ("chi2", chi2)])
 	
-	X_train = combined_features.fit(X_train.toarray(), cl.y_train).transform(X_train)
+	# X_train = combined_features.fit(X_train.toarray(), cl.y_train).transform(X_train)
 	
-	forest = RandomForestClassifier()
+	# forest = RandomForestClassifier()
 
-	pipeline = Pipeline([("features", combined_features), ("forest", forest)])
-	#X_test = chi2.transform(X_test)   # note: no fitting, only transform
+	# pipeline = Pipeline([("features", combined_features), ("forest", forest)])
+	# #X_test = chi2.transform(X_test)   # note: no fitting, only transform
 
-	param_grid = dict(features__chi2__k=np.arange(50,2050,100).tolist(),
-						pca__n_components=np.arange(40,200,40).tolist(),
-                  		forest__n_estimators=np.arange(20,100,20).tolist())
+	# param_grid = dict(features__chi2__k=np.arange(50,2050,100).tolist(),
+	# 					pca__n_components=np.arange(40,200,40).tolist(),
+ #                  		forest__n_estimators=np.arange(20,100,20).tolist())
 
-	grid_search = GridSearchCV(pipeline, param_grid=param_grid, verbose=10)
-	grid_search.fit(X_train, cl.y_train)
-	print(grid_search.best_estimator_)
+	# grid_search = GridSearchCV(pipeline, param_grid=param_grid, verbose=10)
+	# grid_search.fit(X_train, cl.y_train)
+	# print(grid_search.best_estimator_)
 
 	#X_dicf_df = cl.get_dict_features_from_df_parallel(cl.train_nofeatures)
 	#cl.model_feature_names = list(X_dicf_df)
@@ -435,7 +468,16 @@ if __name__ == '__main__':
 	# print("fitted random forest..")
 	# y_predicted = forest.predict(X_test)
 
-	print("accuracy:", round(accuracy_score(cl.y_test, y_predicted),3))
+	print("accuracy:", round(accuracy_score(cl.y_test, y_pred),3))
+	
+	lab_lst = []
+	tar_lst = []
+
+	for spo,v in cl.sports_encoded.items():
+		lab_lst.append(v)
+		tar_lst.append(spo)
+
+	print(classification_report(cl.y_test, y_pred, target_names=tar_lst))
 
 	#dill.dump(classifier, open("model.dill","w"))
 	
